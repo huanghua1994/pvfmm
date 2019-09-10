@@ -92,18 +92,27 @@ void CheckFMMOutput(pvfmm::FMM_Tree<FMM_Mat_t>* mytree, const pvfmm::Kernel<type
   {
     Real_t max_=0;
     Real_t max_err=0;
+    Real_t err_L2 = 0;
+    Real_t ref_L2 = 0;
     for(size_t i=0;i<trg_poten_fmm.size();i++){
       Real_t err=fabs(glb_trg_poten_dir[i+(recv_disp[myrank]/3)*trg_dof]-trg_poten_fmm[i]);
       Real_t max=fabs(glb_trg_poten_dir[i+(recv_disp[myrank]/3)*trg_dof]);
       if(err>max_err) max_err=err;
       if(max>max_) max_=max;
+      err_L2 += err * err;
+      ref_L2 += max * max;
     }
     Real_t glb_max, glb_max_err;
+    Real_t glb_ref_L2, glb_err_L2;
     MPI_Reduce(&max_   , &glb_max    , 1, pvfmm::par::Mpi_datatype<Real_t>::value(), pvfmm::par::Mpi_datatype<Real_t>::max(), 0, c1);
     MPI_Reduce(&max_err, &glb_max_err, 1, pvfmm::par::Mpi_datatype<Real_t>::value(), pvfmm::par::Mpi_datatype<Real_t>::max(), 0, c1);
+    MPI_Reduce(&err_L2, &glb_err_L2, 1, pvfmm::par::Mpi_datatype<Real_t>::value(), MPI_SUM, 0, c1);
+    MPI_Reduce(&ref_L2, &glb_ref_L2, 1, pvfmm::par::Mpi_datatype<Real_t>::value(), MPI_SUM, 0, c1);
+    
     if(!myrank){
       std::cout<<"Maximum Absolute Error ["<<t_name<<"] :  "<<std::scientific<<glb_max_err<<'\n';
       std::cout<<"Maximum Relative Error ["<<t_name<<"] :  "<<std::scientific<<glb_max_err/glb_max<<'\n';
+      printf("||y_{ref} - y_{fmm}||_2 / ||y_{ref}||_2 = %e\n", std::sqrt(glb_err_L2) / std::sqrt(glb_ref_L2));
     }
   }
 }
