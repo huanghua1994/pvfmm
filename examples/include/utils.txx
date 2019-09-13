@@ -78,6 +78,7 @@ void CheckFMMOutput(pvfmm::FMM_Tree<FMM_Mat_t>* mytree, const pvfmm::Kernel<type
   //Direct N-Body.
   std::vector<Real_t> trg_poten_dir(glb_trg_cnt*trg_dof ,0);
   std::vector<Real_t> glb_trg_poten_dir(glb_trg_cnt*trg_dof ,0);
+  printf("[DEBUG] Rank %d: N-Body Direct: source & target points = %d %d\n", myrank, src_cnt, glb_trg_cnt);
   pvfmm::Profile::Tic("N-Body Direct",&c1,false,1);
   #pragma omp parallel for
   for(int i=0;i<np;i++){
