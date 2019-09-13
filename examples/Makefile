@@ -27,7 +27,8 @@ TARGET_BIN = \
        $(BINDIR)/example2 \
        $(BINDIR)/fmm_pts \
        $(BINDIR)/fmm_cheb \
-       $(BINDIR)/fmm_pts_fin
+       $(BINDIR)/fmm_pts_fin \
+       $(BINDIR)/direct_nbody
 
 all : $(TARGET_BIN)
 
