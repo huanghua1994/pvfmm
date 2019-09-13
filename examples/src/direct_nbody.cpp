@@ -55,7 +55,7 @@ int main(int argc, char **argv)
             int n_trg_thread = trg_eidx - trg_sidx;
             kernel->ker_poten(
                 src_coord, n_src, src_val, 1, 
-                trg_coord, n_trg_thread, trg_val + trg_sidx, NULL
+                trg_coord + trg_sidx, n_trg_thread, trg_val + trg_sidx, NULL
             );
         }
         pvfmm::Profile::Toc();
