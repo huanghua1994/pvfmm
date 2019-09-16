@@ -57,25 +57,40 @@ void fmm_test(int ker, size_t N, size_t M, Real_t b, int dist, int mult_order, i
     //src_coord=point_distrib<Real_t>((dist==0?UnifGrid:(dist==1?RandSphr:RandElps)),N,comm);
     //for(size_t i=0;i<src_coord.size();i++) src_coord[i]*=b;
     src_coord.resize(N * PVFMM_COORD_DIM);
-    FILE *inf = fopen(fname, "r");
-    int idx = 0;
-    for (int ipoint = 0; ipoint < N; ipoint++)
+    
+    int need_gen = 1;
+    if (strstr(fname, ".csv") != NULL)
     {
-      double x;
-      for (int idim = 0; idim < PVFMM_COORD_DIM-1; idim++)
-      {
-        fscanf(inf, "%lf,", &x);
-        // Points are in [-1, 1]^3 unit box, need to be scaled and shifted
-        src_coord[idx] = (x + 1.0) * 0.5;
-        idx++;
-      }
-      fscanf(inf, "%lf\n", &x);
-      src_coord[idx] = (x + 1.0) * 0.5;
-      idx++;
+        printf("[DEBUG] Reading coordinates from CSV file...");
+        FILE *inf = fopen(fname, "r");
+        for (int i = 0; i < N; i++)
+        {
+            for (int j = 0; j < PVFMM_COORD_DIM; j++) 
+                fscanf(inf, "%lf,", &src_coord[i * PVFMM_COORD_DIM + j]);
+            fscanf(inf, "%lf\n", &src_coord[i * PVFMM_COORD_DIM + PVFMM_COORD_DIM-1]);
+        }
+        fclose(inf);
+        printf(" done.\n");
+        need_gen = 0;
     }
-    fclose(inf);
-    src_coord.resize(idx);
-    printf("[DEBUG] Read %d values from %s\n", src_coord.size(), fname);
+    if (strstr(fname, ".bin") != NULL)
+    {
+        printf("[DEBUG] Reading coordinates from binary file...");
+        FILE *inf = fopen(fname, "rb");
+        fread(&src_coord[0], sizeof(Real_t), N * PVFMM_COORD_DIM, inf);
+        fclose(inf);
+        printf(" done.\n");
+        need_gen = 0;
+    }
+    if (need_gen == 1)
+    {
+        printf("[DEBUG] Binary/CSV coordinate file not provided. Generating random coordinates...");
+        src_coord=point_distrib<Real_t>((dist==0?UnifGrid:(dist==1?RandSphr:RandElps)),N,comm);
+        for(size_t i=0;i<src_coord.size();i++) src_coord[i]*=b;
+        printf(" done.\n");
+    } else {
+        printf("[DEBUG] Read %d values from %s\n", src_coord.size(), fname);
+    }
 
 
     for(size_t i=0;i<src_coord.size()*mykernel->ker_dim[0]/PVFMM_COORD_DIM;i++) src_value.push_back(drand48()-0.5);
