@@ -5,6 +5,12 @@
  * \brief This file contains the definitions of the wrapper functions for PVFMM.
  */
 
+#include <mpi_node.hpp>
+#include <fmm_tree.hpp>
+#include <fmm_pts.hpp>
+#include <vector.hpp>
+#include <parUtils.h>
+
 namespace pvfmm{
 
 template <class Real>
@@ -27,9 +33,9 @@ inline ChebFMM_Tree<Real>* ChebFMM_CreateTree(int cheb_deg, int data_dim, ChebFn
 
   { // Set points for initial tree.
     std::vector<Real> coord;
-    size_t N=pvfmm::pow<unsigned int>(8,init_depth);
-    N=(N<np?np:N)*max_pts;
-    size_t NN=ceil(pvfmm::pow<Real>(N,1.0/3.0));
+    size_t N=sctl::pow<unsigned int>(8,init_depth);
+    N=(N<(size_t)np?np:N)*max_pts;
+    size_t NN=(size_t)ceil(sctl::pow<Real>(N,1.0/3.0));
     size_t N_total=NN*NN*NN;
     size_t start= myrank   *N_total/np;
     size_t end  =(myrank+1)*N_total/np;
