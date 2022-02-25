@@ -42,6 +42,9 @@ void PVFMMEvalD(const double* src_pos, const double* sl_den, const double* dl_de
 // Destroy double-precision particle FMM context
 void PVFMMDestroyContextD(void** ctx);
 
+void PVFMMPrintMyTimingsF(void *ctx_);
+void PVFMMPrintMyTimingsD(void *ctx_);
+
 #ifdef __cplusplus
 }
 #endif

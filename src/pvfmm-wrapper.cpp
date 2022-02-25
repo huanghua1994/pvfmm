@@ -18,6 +18,8 @@ template<typename Real> struct PVFMMContext{
   typename Node_t::NodeData tree_data;
   Tree_t* tree;
   Mat_t* mat;
+
+  double ctx_create_t, init_tree_t, run_fmm_t;
 };
 
 template<typename Real> static void* PVFMMCreateContext(Real box_size, int n, int m, int max_d, const pvfmm::Kernel<Real>* ker, MPI_Comm comm) {
@@ -26,6 +28,8 @@ template<typename Real> static void* PVFMMCreateContext(Real box_size, int n, in
 
   // Create new context.
   PVFMMContext<Real>* ctx = new PVFMMContext<Real>;
+
+  ctx->ctx_create_t = -MPI_Wtime();
 
   // Set member variables.
   ctx->box_size=box_size;
@@ -75,6 +79,8 @@ template<typename Real> static void* PVFMMCreateContext(Real box_size, int n, in
   ctx->tree->Initialize(&ctx->tree_data);
   ctx->tree->InitFMM_Tree(adap,ctx->bndry);
 
+  ctx->ctx_create_t += MPI_Wtime();
+
   pvfmm::Profile::Enable(prof_state);
   pvfmm::Profile::Toc();
   return ctx;
@@ -90,6 +96,8 @@ template<typename Real> static void PVFMMEval(const Real* src_pos, const Real* s
   assert(ctx_);
   PVFMMContext<Real>* ctx=(PVFMMContext<Real>*)ctx_;
   const int* ker_dim=ctx->ker->ker_dim;
+
+  ctx->init_tree_t = -MPI_Wtime();
 
   pvfmm::Profile::Tic("FMM",&ctx->comm);
   Real scale_x, shift_x[PVFMM_COORD_DIM];
@@ -410,6 +418,11 @@ template<typename Real> static void PVFMMEval(const Real* src_pos, const Real* s
   // Setup tree for FMM.
   if(setup) ctx->tree->SetupFMM(ctx->mat);
   else ctx->tree->ClearFMMData();
+
+  ctx->init_tree_t += MPI_Wtime();
+
+  ctx->run_fmm_t = -MPI_Wtime();
+
   ctx->tree->RunFMM();
 
   { // Get target potential.
@@ -446,6 +459,8 @@ template<typename Real> static void PVFMMEval(const Real* src_pos, const Real* s
     }
   }
   pvfmm::Profile::Toc();
+
+  ctx->run_fmm_t += MPI_Wtime();
 }
 
 template<typename Real> static void PVFMMDestroyContext(void** ctx){
@@ -556,6 +571,23 @@ void PVFMMDestroyContextD(void** ctx) {
   PVFMMDestroyContext<double>(ctx);
 }
 
+void PVFMMPrintMyTimingsF(void *ctx_)
+{
+    PVFMMContext<float> *ctx = (PVFMMContext<float> *) ctx_;
+    printf(
+        "ctx_create, init_tree, ctx_create + init_tree, run_fmm = %.3lf, %.3lf, %.3lf, %.3lf\n",
+        ctx->ctx_create_t, ctx->init_tree_t, ctx->init_tree_t + ctx->ctx_create_t, ctx->run_fmm_t
+    );
+}
+
+void PVFMMPrintMyTimingsD(void *ctx_)
+{
+    PVFMMContext<double> *ctx = (PVFMMContext<double> *) ctx_;
+    printf(
+        "ctx_create, init_tree, ctx_create + init_tree, run_fmm = %.3lf, %.3lf, %.3lf, %.3lf\n",
+        ctx->ctx_create_t, ctx->init_tree_t, ctx->init_tree_t + ctx->ctx_create_t, ctx->run_fmm_t
+    );
+}
 
 #ifdef __cplusplus
 }

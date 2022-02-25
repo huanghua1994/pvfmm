@@ -10,6 +10,7 @@ endif
 
 # FC=$(FC_PVFMM) # TODO: for now, FC must be provided by user
 # CC=$(CC_PVFMM) # TODO: for now, CC must be provided by user
+CC=mpiicc
 CXX=$(CXX_PVFMM)
 CXXFLAGS=$(CXXFLAGS_PVFMM)
 LDLIBS=$(LDLIBS_PVFMM)
@@ -29,7 +30,8 @@ TARGET_BIN = \
        $(BINDIR)/fmm_pts \
        $(BINDIR)/fmm_cheb \
        $(BINDIR)/fmm_pts_fin \
-       $(BINDIR)/direct_nbody
+       $(BINDIR)/direct_nbody \
+       $(BINDIR)/example-c-fin
 
 all : $(TARGET_BIN)
 
